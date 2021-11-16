@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/go-co-op/gocron"
 )
 
 type ThingsPayload struct {
@@ -78,10 +80,11 @@ func dataSeed(key string) {
 	valval += 1
 }
 
-func main() {
+var task = func() {
 	file, err := os.Open("thing_key.csv")
 	if err != nil {
 		fmt.Println(err)
+
 	}
 	reader := csv.NewReader(file)
 	records, _ := reader.ReadAll()
@@ -89,4 +92,15 @@ func main() {
 	for _, val := range records[0] {
 		dataSeed(val)
 	}
+}
+
+func main() {
+
+	s := gocron.NewScheduler(time.UTC)
+	_, err := s.Every(10).Minutes().Do(task)
+	if err != nil {
+		fmt.Println("error", err)
+		return
+	}
+	s.StartBlocking()
 }
